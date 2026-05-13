@@ -20,8 +20,9 @@ export class StrategicService {
 
     // A. Revenue by Manager
     const managerRevenue: Record<string, number> = {};
-    projects?.forEach(p => {
-      const name = p.responsables?.nom || 'Non assigné';
+    projects?.forEach((p: any) => {
+      const responsablesData = p.responsables;
+      const name = (Array.isArray(responsablesData) ? responsablesData[0]?.nom : (responsablesData as any)?.nom) || 'Non assigné';
       managerRevenue[name] = (managerRevenue[name] || 0) + (p.ca_total || 0);
     });
 

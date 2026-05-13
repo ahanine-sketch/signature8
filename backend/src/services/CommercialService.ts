@@ -13,12 +13,18 @@ export class CommercialService {
     const currentMonthStart = new Date(currentMonthStr);
 
     // --- 1. BASIC COUNTS (TOTALS) ---
-    const { count: totalDemandes } = await supabase.from('demandes').select('*', { count: 'exact', head: true });
-    const { count: totalProjets } = await supabase.from('projets').select('*', { count: 'exact', head: true });
-    const { count: totalDevis } = await supabase.from('devis').select('*', { count: 'exact', head: true });
+    const { count: totalDemandesRaw } = await supabase.from('demandes').select('*', { count: 'exact', head: true });
+    const { count: totalProjetsRaw } = await supabase.from('projets').select('*', { count: 'exact', head: true });
+    const { count: totalDevisRaw } = await supabase.from('devis').select('*', { count: 'exact', head: true });
     
+    const totalDemandes = totalDemandesRaw || 0;
+    const totalProjets = totalProjetsRaw || 0;
+    const totalDevis = totalDevisRaw || 0;
+
     // --- 2. QUALIFICATION & CONVERSION ---
-    const { count: qualified } = await supabase.from('demandes').select('*', { count: 'exact', head: true }).neq('statut', 'nouveau');
+    const { count: qualifiedRaw } = await supabase.from('demandes').select('*', { count: 'exact', head: true }).neq('statut', 'nouveau');
+    const qualified = qualifiedRaw || 0;
+    
     const tauxQualification = totalDemandes ? Math.round((qualified / totalDemandes) * 100) : 0;
     const tauxConversion = totalDemandes ? Math.round((totalProjets / totalDemandes) * 100) : 0;
 
@@ -96,8 +102,8 @@ export class CommercialService {
     // Funnel Data
     const funnelData = [
       { label: "Leads Entrants", value: (totalDemandes || 0).toString(), percentage: "100%", width: "100%", color: "from-[#755a23] to-[#b8975a]" },
-      { label: "Qualifiés", value: qualified.toString(), percentage: `${tauxQualification}%`, width: `${tauxQualification}%`, color: "from-[#664e1e] to-[#a38650]", insight: "Qualification par diagnostic" },
-      { label: "Devis envoyés", value: (totalDevis || 0).toString(), percentage: totalDemandes > 0 ? `${Math.round((totalDevis/totalDemandes)*100)}%` : "0%", width: totalDemandes > 0 ? `${Math.round((totalDevis/totalDemandes)*100)}%` : "0%", color: "from-[#574219] to-[#8f7546]", insight: "Propositions architecturales" },
+      { label: "Qualifiés", value: (qualified || 0).toString(), percentage: `${tauxQualification}%`, width: `${tauxQualification}%`, color: "from-[#664e1e] to-[#a38650]", insight: "Qualification par diagnostic" },
+      { label: "Devis envoyés", value: (totalDevis || 0).toString(), percentage: (totalDemandes || 0) > 0 ? `${Math.round(((totalDevis || 0) / (totalDemandes || 1)) * 100)}%` : "0%", width: (totalDemandes || 0) > 0 ? `${Math.round(((totalDevis || 0) / (totalDemandes || 1)) * 100)}%` : "0%", color: "from-[#574219] to-[#8f7546]", insight: "Propositions architecturales" },
       { label: "Projets signés", value: (totalProjets || 0).toString(), percentage: `${tauxConversion}%`, width: `${tauxConversion}%`, color: "from-[#453000] to-[#755a23]", final: "Signature Finale" },
     ];
 

@@ -31,7 +31,6 @@ export default function TeamPage() {
     email: "",
     role: "designer",
     actif: true,
-    actif: true,
     performance: 95
   });
 
