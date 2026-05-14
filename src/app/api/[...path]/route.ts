@@ -10,7 +10,7 @@ async function proxyRequest(req: NextRequest) {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api/, '');
   
-  // Diagnostic Route
+  // Diagnostic Routes
   if (path === '/test-proxy') {
     return NextResponse.json({ 
       status: 'Proxy is alive ✅', 
@@ -19,7 +19,23 @@ async function proxyRequest(req: NextRequest) {
     });
   }
 
+  if (path === '/test-backend') {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/health`, { signal: AbortSignal.timeout(5000) });
+      const data = await resp.json();
+      return NextResponse.json({ proxy: 'alive', backend: data });
+    } catch (e: any) {
+      return NextResponse.json({ proxy: 'alive', backend: 'unreachable', error: e.message }, { status: 502 });
+    }
+  }
+
   const targetUrl = `${BACKEND_URL}/api${path}${url.search}`;
+  console.log(`[Proxy] Routing ${req.method} ${path} -> ${targetUrl}`);
+
+  if (targetUrl.includes(url.hostname)) {
+    console.error('[Proxy Error] Infinite loop detected! BACKEND_URL points to the proxy itself.');
+    return NextResponse.json({ error: 'Config Error', message: 'Infinite loop detected' }, { status: 500 });
+  }
 
   // Forward headers (excluding host)
   const headers = new Headers();

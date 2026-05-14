@@ -14,7 +14,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.error('❌ CRITICAL: Missing Supabase environment variables! Check Vercel Dashboard.');
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co', 
-  supabaseServiceKey || 'placeholder-key'
-);
+export const supabase = (supabaseUrl && supabaseServiceKey) 
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : createClient('https://placeholder.supabase.co', 'placeholder-key'); // Fallback to prevent crash

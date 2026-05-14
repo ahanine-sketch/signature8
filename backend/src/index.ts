@@ -61,6 +61,16 @@ app.use(helmet({
 }));
 app.use(express.json());
 
+// Request Logger for Vercel
+app.use((req, _res, next) => {
+  console.log(`[Backend Request] ${req.method} ${req.url}`, {
+    hasBody: !!req.body,
+    contentType: req.headers['content-type']
+  });
+  next();
+});
+
+
 // Safer path for Vercel
 const uploadsPath = path.join(process.cwd(), 'public/uploads');
 app.use('/uploads', express.static(uploadsPath));

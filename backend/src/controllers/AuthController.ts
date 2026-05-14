@@ -13,6 +13,11 @@ export class AuthController {
       const data = await AuthService.login(email, password);
       res.json({ session: data.session, user: data.user });
     } catch (error: any) {
+      console.error('❌ Login Error Trace:', {
+        message: error.message,
+        stack: error.stack,
+        details: error
+      });
       res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
     }
   }
