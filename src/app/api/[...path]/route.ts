@@ -4,10 +4,21 @@ export const dynamic = 'force-dynamic';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:5001';
 
+console.log('Proxy initialized with BACKEND_URL:', BACKEND_URL);
+
 async function proxyRequest(req: NextRequest) {
-  // Extract the path after /api/
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api/, '');
+  
+  // Diagnostic Route
+  if (path === '/test-proxy') {
+    return NextResponse.json({ 
+      status: 'Proxy is alive ✅', 
+      backendUrl: BACKEND_URL,
+      timestamp: new Date().toISOString()
+    });
+  }
+
   const targetUrl = `${BACKEND_URL}/api${path}${url.search}`;
 
   // Forward headers (excluding host)
@@ -24,25 +35,21 @@ async function proxyRequest(req: NextRequest) {
       headers,
     };
 
-    // Robust body handling: forward body stream for all non-GET/HEAD requests
+    // Robust body handling
     if (req.method !== 'GET' && req.method !== 'HEAD') {
-      const contentType = req.headers.get('content-type');
+      const contentType = req.headers.get('content-type') || '';
       
-      if (contentType && contentType.includes('multipart/form-data')) {
-        // For multipart, we MUST NOT set the content-type manually, 
-        // the browser/fetch will set it with the correct boundary.
-        // But for proxying, we just forward the stream.
+      if (contentType.includes('multipart/form-data')) {
+        // Forward multipart stream (required for uploads)
         fetchOptions.body = req.body;
-        // IMPORTANT: undici/fetch with stream body requires duplex: 'half'
         fetchOptions.duplex = 'half';
-        // IMPORTANT: We must NOT set the 'content-type' header manually here 
-        // because the browser's boundary matches the req.body stream precisely.
-        // However, our proxy already copied ALL headers at line 13.
-        // This is correct as long as the req.body hasn't been consumed.
-      } else if (contentType && contentType.includes('application/json')) {
-        const body = await req.text();
-        if (body && body.trim().length > 0) {
-          fetchOptions.body = body;
+      } else {
+        // For JSON and others, read as text first
+        try {
+          const body = await req.text();
+          if (body) fetchOptions.body = body;
+        } catch (e) {
+          console.warn('Could not read request body:', e);
         }
       }
     }
