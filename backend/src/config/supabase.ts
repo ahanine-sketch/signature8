@@ -8,12 +8,11 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-console.log("🛠️ [BACKEND] Supabase Config URL:", supabaseUrl);
-console.log("🛠️ [BACKEND] Supabase Key Prefix:", supabaseServiceKey ? supabaseServiceKey.substring(0, 10) + "..." : "MISSING");
-
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn('⚠️ Missing Supabase environment variables in backend/.env');
+  console.error('❌ CRITICAL: Missing Supabase environment variables! Check Vercel Dashboard.');
 }
 
-
-export const supabase = createClient(supabaseUrl, supabaseServiceKey);
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseServiceKey || 'placeholder-key'
+);
