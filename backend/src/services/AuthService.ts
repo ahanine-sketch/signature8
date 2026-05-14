@@ -1,8 +1,14 @@
-import { supabase } from '../config/supabase';
+import { createAuthClient } from '../config/supabase';
 
 export class AuthService {
   static async login(email: string, pass: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // CRITICAL: use a fresh, isolated client per login call.
+    // Never use the shared `supabase` singleton for auth.signIn —
+    // it would persist the user JWT in memory and corrupt all subsequent
+    // service-role data queries with that user's RLS context.
+    const authClient = createAuthClient();
+
+    const { data, error } = await authClient.auth.signInWithPassword({
       email,
       password: pass,
     });
@@ -12,8 +18,8 @@ export class AuthService {
   }
 
   static async logout() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    // logout is stateless from the server's perspective — the client
+    // simply discards its JWT token. Nothing to do server-side.
     return true;
   }
 }
