@@ -3,7 +3,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Load environment variables from the root of the backend folder
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+try {
+  dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+} catch (e) {}
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
