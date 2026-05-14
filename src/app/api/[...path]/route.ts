@@ -70,13 +70,19 @@ async function proxyRequest(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error(`[Proxy Error] ${req.method} ${targetUrl}:`, error.name === 'AbortError' ? 'Timeout' : error.message);
+    console.error(`[Proxy Error] ${req.method} ${targetUrl}:`, error.message);
     
-    const statusCode = error.name === 'AbortError' ? 504 : 502;
-    const errorMessage = error.name === 'AbortError' ? 'Backend Request Timeout' : 'Backend unavailable';
+    // Distinguish between connection errors and execution errors
+    const statusCode = error.name === 'AbortError' ? 504 : 500;
+    const errorType = error.name === 'AbortError' ? 'Timeout' : 'Proxy Error';
 
     return NextResponse.json(
-      { error: errorMessage, details: error.message },
+      { 
+        error: errorType, 
+        message: error.message,
+        target: targetUrl.split('?')[0], // Don't log full URL with query params
+        backendConfigured: BACKEND_URL !== 'http://127.0.0.1:5001'
+      },
       { status: statusCode }
     );
   }
