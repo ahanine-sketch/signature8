@@ -88,15 +88,14 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 // ─── Server Start ────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`
-  🚀 Signature 8 Backend — Modular Architecture
-  ─────────────────────────────────────────────
-  🌐 API Root  : http://localhost:${PORT}/api
-  🔐 Auth      : POST /api/auth/login
-  📋 Demandes  : GET/POST /api/demandes
-  🏠 Projets   : GET /api/projets
-  👥 Clients   : GET /api/clients
-  👤 Équipe    : GET /api/responsables
-  `);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`
+    🚀 Signature 8 Backend — Modular Architecture
+    ─────────────────────────────────────────────
+    🌐 API Root  : http://localhost:${PORT}/api
+    `);
+  });
+}
+
+export default app;
