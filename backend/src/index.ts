@@ -48,21 +48,22 @@ app.use((req, res, next) => {
 
 
 
-// Request Logger
-app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
+// Env Check Log
+console.log('Backend Initialization:', {
+  hasUrl: !!process.env.SUPABASE_URL,
+  hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  cwd: process.cwd()
 });
-
-// Remove the old cors() call if I had one
-// app.use(cors(...)); 
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: false, // Disable CSP for local dev to avoid interference
 }));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+
+// Safer path for Vercel
+const uploadsPath = path.join(process.cwd(), 'public/uploads');
+app.use('/uploads', express.static(uploadsPath));
 
 // ─── Health Check ───────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
